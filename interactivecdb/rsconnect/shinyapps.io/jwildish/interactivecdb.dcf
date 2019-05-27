@@ -1,0 +1,12 @@
+name: interactivecdb
+title: interactivecdb
+username:
+account: jwildish
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 951389
+bundleId: 2111855
+url: https://jwildish.shinyapps.io/interactivecdb/
+when: 1558984323.21842
+asMultiple: FALSE
+asStatic: FALSE
