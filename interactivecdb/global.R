@@ -5,9 +5,8 @@ library(shinydashboard)
 library(plotly)
 library(dplyr)
 
-
-mergedf6.6<-read.csv("./mergedf6.6.csv")
-table(mergedf6.6$`Project Type`)
+getwd()
+mergedf6.6<-read.csv("./Data/mergedf6.6.csv")
 
 mergedf6.6 <- rename(mergedf6.6, "Offset.Project Operator" = "Offset.Project.Operator")
 mergedf6.6 <- rename(mergedf6.6, "Offset Designation" = "Offset.Designation")
@@ -24,6 +23,8 @@ mergedf6.6$Vintage.Year <- as.character(mergedf6.6$Vintage.Year)
 mergedf6.6$`Offset Designation` <- as.character(mergedf6.6$`Offset Designation`)
 mergedf6.6$`Offset.Project Operator` <- as.character(mergedf6.6$`Offset.Project Operator`)
 mergedf6.6$`Project Type` <- as.character(mergedf6.6$`Project Type`)
+
+mergedf6.6 <- subset(mergedf6.6, !is.na(`Offset Designation`))
 
 devnames <- unique(mergedf6.6$`Offset.Project Operator`)
 protnames <- unique(mergedf6.6$`Project Type`)
