@@ -13,22 +13,21 @@ library(shinydashboard)
 library(plotly)
 library(dplyr)
 
-
+head
 # Define UI for application that draws a histogram
-shinyUI(dashboardPage(
-    dashboardHeader(title = "Emissions Reductions, by Digester Type "),
-    dashboardSidebar(selectizeInput('x', label = 'Project Type',
-                                    choices = c("All", protnames)),
-                     selectizeInput('y', label = 'Offset Designation', 
-                                    choices = c("All", desnamesnames)),
-                     selectizeInput("color", label = "Vintage Year", 
+shinyUI(fluidPage(
+    headerPanel(title = "Offset Database"), 
+    fluidRow(column(3, selectizeInput('x', label = 'Project Type',
+                                    choices = c("All", protnames))),
+                     column(3, selectizeInput('y', label = 'Offset Designation', 
+                                    choices = c("All", desnamesnames))),
+                    column(3, selectizeInput("color", label = "Vintage Year", 
                                     choices = c("All", vintnames),
-                                    selected = "All"),
-                     selectizeInput("dev", label = "Project Developer", 
+                                    selected = "All")),
+                   column(3, selectizeInput("dev", label = "Project Developer", 
                                     choices = c("All", devnames),
-                                    selected = "All")
+                                    selected = "All"))
                      
     ),
-    dashboardBody(box(DT::dataTableOutput("mytable"), width = 12)
-    )
-))
+    (DT::dataTableOutput("mytable"))
+    ))

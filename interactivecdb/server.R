@@ -18,7 +18,7 @@ library(dplyr)
 devnames <- unique(mergedf6.6$`Offset.Project Operator`)
 protnames <- unique(mergedf6.6$`Project Type`)
 desnamesnames <- unique(mergedf6.6$`Offset Designation`)
-vintnames <- unique(mergedf6.6$Vintage.Year)
+vintnames <- unique(mergedf6.6$`Vintage Year`)
 shinyServer(function(input, output, session) {
   
   updateSelectizeInput(session, 'x',
@@ -30,7 +30,7 @@ shinyServer(function(input, output, session) {
                        server = TRUE
   )
   updateSelectizeInput(session, 'color',
-                       choices = c("All", unique(mergedf6.6$Vintage.Year)), selected = "All", 
+                       choices = c("All", unique(mergedf6.6$`Vintage Year`)), selected = "All", 
                        server = TRUE)
   updateSelectizeInput(session, 'dev',
                        choices = c("All", unique(mergedf6.6$`Offset.Project Operator`)), selected = "All",
@@ -53,7 +53,7 @@ shinyServer(function(input, output, session) {
       data <- data[data$`Project Type` %in% input$x,]
     }
     if (input$color != "All") {
-      data <- data[data$Vintage.Year %in% input$color,]
+      data <- data[data$`Vintage Year` %in% input$color,]
     }
     if (input$dev != "All") {
       data <- data[data$`Offset.Project Operator` %in% input$dev,]
