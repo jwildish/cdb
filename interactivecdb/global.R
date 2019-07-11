@@ -7,11 +7,12 @@ library(dplyr)
 
 getwd()
 
-#write.csv(mergedf6.6, file = "./interactivecdb/Data/mergedf6.7.csv")
+#write.csv(mergedf6.6, file = "./interactivecdb/Data/mergedf6.6.csv")
 
-#mergedf6.6<- read.csv(file = "c:/Users/Jordan/output7.csv")
+#mergedf6.6 <-read.csv("./interactivecdb/Data/mergedf6.6.csv")
+mergedf6.6 <-read.csv("./Data/mergedf6.6.csv")
 
-mergedf6.6 <-read.csv("./Data/mergedf6.7.csv")
+getwd()
 
 mergedf6.6 <- rename(mergedf6.6, "Offset.Project Operator" = "Offset.Project.Operator")
 mergedf6.6 <- rename(mergedf6.6, "Offset Designation" = "Offset.Designation")
@@ -43,3 +44,4 @@ mergedf6.6$X <- NULL
 
 mergedf6.6$`Invalidation Period End Date` <- NULL
 mergedf6.6$`Type of Protocol` <- NULL
+

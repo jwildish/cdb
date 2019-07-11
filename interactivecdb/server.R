@@ -75,4 +75,25 @@ shinyServer(function(input, output, session) {
     content = function(file) {
       write.csv(Combineddata, file)
     })
+  output$trendPlot <- renderPlotly({
+    data <- mergedf6.6
+    if (input$y != "All") {
+      data <- data[data$`Offset Designation` %in% input$y,]
+    }
+    if (input$x != "All") {
+      data <- data[data$`Project Type` %in% input$x,]
+    }
+    if (input$color != "All") {
+      data <- data[data$`Vintage Year` %in% input$color,]
+    }
+    if (input$dev != "All") {
+      data <- data[data$`Offset.Project Operator` %in% input$dev,]
+    }
+    data
+    data$Year <- year(data$`Issuance Date`)
+    p <- plot_ly(data, x = data$Year, y = data$`Offsets Issued`, type = "bar", color =  ~data$`Project Type`) %>% 
+      layout(yaxis = list(title = 'Offsets Issued (by year)'), barmode = 'stack')
+  })
 })
+
+names(mergedf6.6)

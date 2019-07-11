@@ -6,17 +6,26 @@
 #
 #    http://shiny.rstudio.com/
 #
-
+library(dplyr)
+library(readxl)
+library(DT)
+library(shiny)
+library(shinydashboard)
+library(plotly)
+library(ggplot2)
+library(lubridate)
+#
 library(shiny)
 library(DT)
 library(shinydashboard)
 library(plotly)
 library(dplyr)
+library(RCurl)
+library(leaflet)
 
-head
 # Define UI for application that draws a histogram
 shinyUI(fluidPage(
-    headerPanel(title = "Offset Database"), 
+    headerPanel(title = "Regulatory Carbon Offset Database"), 
     fluidRow(column(3, selectizeInput('x', label = 'Project Type',
                                     choices = c("All", protnames))),
                      column(3, selectizeInput('y', label = 'Offset Designation', 
@@ -28,6 +37,7 @@ shinyUI(fluidPage(
                                     choices = c("All", devnames),
                                     selected = "All"))
                      
-    ),
-    (DT::dataTableOutput("mytable"))
-    ))
+    ), tabsetPanel(type = "tabs",
+                        tabPanel("Table", DT::dataTableOutput("mytable")),
+                        tabPanel("Graph", plotlyOutput("trendPlot"))))
+    )
