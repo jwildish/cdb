@@ -14,11 +14,14 @@ library(shinydashboard)
 library(plotly)
 library(dplyr)
 
-
-devnames <- unique(mergedf6.6$`Offset.Project Operator`)
+mergedf6.6$Offset.Project.Operator <- as.character(mergedf6.6$Offset.Project.Operator)
+devnames <- unique(mergedf6.6$Offset.Project.Operator)
 protnames <- unique(mergedf6.6$`Project Type`)
 desnamesnames <- unique(mergedf6.6$`Offset Designation`)
 vintnames <- unique(mergedf6.6$`Vintage Year`)
+
+devnames <- sort(devnames)
+
 shinyServer(function(input, output, session) {
   
   updateSelectizeInput(session, 'x',
@@ -33,7 +36,7 @@ shinyServer(function(input, output, session) {
                        choices = c("All", unique(mergedf6.6$`Vintage Year`)), selected = "All", 
                        server = TRUE)
   updateSelectizeInput(session, 'dev',
-                       choices = c("All", unique(mergedf6.6$`Offset.Project Operator`)), selected = "All",
+                       choices = c("All", devnames), selected = "All",
                        server = TRUE)
   
   
@@ -41,7 +44,7 @@ shinyServer(function(input, output, session) {
     mergedf6.6 %>% filter(Vintage.Year %in% input$color &
                             `Project Type` %in% input$x &
                             `Offset Designation` %in% input$y
-                          & `Offset.Project Operator` %in% input$dev)
+                          & `Project Administrator` %in% input$dev)
   })
   
   output$mytable <- DT::renderDataTable(DT::datatable({
@@ -56,18 +59,27 @@ shinyServer(function(input, output, session) {
       data <- data[data$`Vintage Year` %in% input$color,]
     }
     if (input$dev != "All") {
-      data <- data[data$`Offset.Project Operator` %in% input$dev,]
+      data <- data[data$`Offset.Project.Operator` %in% input$dev,]
     }
-    data
-  }, escape = FALSE,  selection = 'multiple', filter ='top',extensions = 'Buttons', options = list(
-    searching = TRUE,
-    ordering = TRUE,
-    filter = 'top',
-    selection ='multiple',
-    dom = 'Bfrtip',
-    buttons = c('copy', 'csv', 'excel')
-  ), class = 'display'
-  ))
+   
+    data$Website <- paste0('<a href="', data$Website,'">',data$Website,"</a>")
+    
+    data$`Offsets Issued` <- format(as.numeric(data$`Offsets Issued`), big.mark=",") 
+    data$`Number of Offsets Unretired (Estimated as of 12/18)` <- format(as.numeric(data$`Number of Offsets Unretired (Estimated as of 12/18)`), big.mark=",") 
+    
+    data <- as.data.frame(data)
+    data <- data[rev(order(data$`Issuance Date`)),] 
+    
+  }, escape = FALSE,  selection = 'multiple', filter ='top', rownames = FALSE,
+  extensions = c('Buttons', 'Responsive'), options = list(initComplete = JS(
+    "function(settings, json) {",
+    "$('body').css({'font-family': 'Calibri'});",
+    "}"
+  ), autoWidth = TRUE,  pageLength = 10,
+  lengthMenu = c(10, 20, 50), dom = 'Brtip', buttons = c('copy','excel', 'pdf', 'print'), rownames=FALSE,
+  column = list(list(width = '150px', width = '50px'))))  %>% 
+    DT::formatStyle(columns = c(1:13), fontSize = '75%'))
+  
   output$downloadData <- downloadHandler(
     filename = function() {
       paste("data", Sys.Date(), ".csv", sep="")
@@ -87,12 +99,17 @@ shinyServer(function(input, output, session) {
       data <- data[data$`Vintage Year` %in% input$color,]
     }
     if (input$dev != "All") {
-      data <- data[data$`Offset.Project Operator` %in% input$dev,]
+      data <- data[data$`Offset.Project.Operator` %in% input$dev,]
     }
     data
+    
+    marker_style <- list(line = list(width = 5,
+                                     color = 'rgb(0, 0, 0)'))
+    
     data$Year <- year(data$`Issuance Date`)
-    p <- plot_ly(data, x = data$Year, y = data$`Offsets Issued`, type = "bar", color =  ~data$`Project Type`) %>% 
-      layout(yaxis = list(title = 'Offsets Issued (by year)'), barmode = 'stack')
+    p <- plot_ly(data, x = data$Year, y = data$`Offsets Issued`, text= data$`Project Administrator`, 
+                 hovertemplate = paste("<b>%{text}</b>"),  type = "bar", color =  ~data$`Project Type`, line = ~data$Project.Name) %>% 
+      layout(yaxis = list(title = 'Offsets Issued (by year)'), barmode = 'stack') 
   })
 })
 
