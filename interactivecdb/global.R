@@ -8,6 +8,7 @@ library(scales)
 library(fuzzyjoin)
 #install.packages("shinycssloaders")
 library(shinycssloaders)
+library(viridis)
 getwd()
 
 #write.csv(mergedf6.6, file = "./interactivecdb/Data/mergedf6.6.csv")
@@ -76,4 +77,11 @@ names(mergedf6.6)
 
 mergedf6.6 <- rename(mergedf6.6, "Project Type" = "Project.Type")
 mergedf6.6$Offset.Project.Operator <- replace(mergedf6.6$Offset.Project.Operator, mergedf6.6$Offset.Project.Operator == "A-Gas", "A Gas")
+mergedf6.6$State[mergedf6.6$State == 0] <- "Unknown"
+mergedf6.6$State[mergedf6.6$State == "Florida"] <- "FL"
+mergedf6.6$State[mergedf6.6$State == "New York"] <- "NY"
+mergedf6.6$State[mergedf6.6$State == "Indiana"] <- "IN"
+mergedf6.6$State[mergedf6.6$State == "Virginia"] <- "VA"
 
+
+table(mergedf6.6$State)

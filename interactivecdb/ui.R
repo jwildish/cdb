@@ -39,5 +39,6 @@ shinyUI(fluidPage(
                      
     ), tabsetPanel(type = "tabs",
                         tabPanel("Table", DT::dataTableOutput("mytable")%>% withSpinner(color="#0dc5c1")),
-                        tabPanel("Graph", plotlyOutput("trendPlot"))))
+                        tabPanel("Graph", plotlyOutput("trendPlot")),
+                        tabPanel("Map", br(), br(), plotlyOutput("mapPlot"))))
     )

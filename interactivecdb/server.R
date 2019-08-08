@@ -13,6 +13,7 @@ library(DT)
 library(shinydashboard)
 library(plotly)
 library(dplyr)
+library(scales)
 
 mergedf6.6$Offset.Project.Operator <- as.character(mergedf6.6$Offset.Project.Operator)
 devnames <- unique(mergedf6.6$Offset.Project.Operator)
@@ -48,6 +49,17 @@ shinyServer(function(input, output, session) {
   })
   
   output$mytable <- DT::renderDataTable(DT::datatable({
+  #  names(mergedf6.6)
+    mergedf6.6 <- mergedf6.6%>% select(Offset.Project.Operator, `Project Type`, Project.Name, Project.ID, State, City, `Offsets Issued`, 
+                                       `Number of Offsets Unretired (Estimated as of 12/18)`, `Percent of Offsets Sold (Estimated as of 12/18)`, `Vintage Year`,
+                                       `Offset Designation`, `Issuance Date`, Website)
+    
+    mergedf6.6 <- rename(mergedf6.6, "Project Name" = "Project.Name")
+    mergedf6.6 <- rename(mergedf6.6, "Project ID" = "Project.ID")
+    mergedf6.6 <- rename(mergedf6.6, "Offset Project Operator" = "Offset.Project.Operator")
+    
+    
+    
     data <- mergedf6.6
     if (input$y != "All") {
       data <- data[data$`Offset Designation` %in% input$y,]
@@ -59,7 +71,7 @@ shinyServer(function(input, output, session) {
       data <- data[data$`Vintage Year` %in% input$color,]
     }
     if (input$dev != "All") {
-      data <- data[data$`Offset.Project.Operator` %in% input$dev,]
+      data <- data[data$`Offset Project Operator` %in% input$dev,]
     }
    
     data$Website <- paste0('<a href="', data$Website,'">',data$Website,"</a>")
@@ -87,6 +99,7 @@ shinyServer(function(input, output, session) {
     content = function(file) {
       write.csv(Combineddata, file)
     })
+  
   output$trendPlot <- renderPlotly({
     data <- mergedf6.6
     if (input$y != "All") {
@@ -111,6 +124,50 @@ shinyServer(function(input, output, session) {
                  hovertemplate = paste("<b>%{text}</b>"),  type = "bar", color =  ~data$`Project Type`, line = ~data$Project.Name) %>% 
       layout(yaxis = list(title = 'Offsets Issued (by year)'), barmode = 'stack') 
   })
+  
+  output$mapPlot <- renderPlotly({
+    data <- mergedf6.6
+    if (input$y != "All") {
+      data <- data[data$`Offset Designation` %in% input$y,]
+    }
+    if (input$x != "All") {
+      data <- data[data$`Project Type` %in% input$x,]
+    }
+    if (input$color != "All") {
+      data <- data[data$`Vintage Year` %in% input$color,]
+    }
+    if (input$dev != "All") {
+      data <- data[data$`Offset.Project.Operator` %in% input$dev,]
+    }
+
+    geocode <- read.csv("./geocode.csv")
+    
+    data$CityState <- paste(data$City, ",", data$State)
+    
+    data <- merge(data, geocode, by = "CityState")
+    
+    g <- list(
+      scope = 'usa',
+      projection = list(type = 'albers usa'),
+      showland = TRUE,
+      landcolor = toRGB("gray95"),
+      subunitcolor = toRGB("gray85"),
+      countrycolor = toRGB("gray85"),
+      countrywidth = 0.5,
+      subunitwidth = 0.5
+    )
+    
+    Operatorandurllookup2$lat <- jitter(Operatorandurllookup2$lat, factor = 0.6)
+    Operatorandurllookup2$lon <- jitter(Operatorandurllookup2$lon, factor = 0.6)
+
+    p <- plot_geo(data, lat = ~lat, lon = ~lon) %>% add_markers(
+      text = paste(data$Offset.Project.Operator, "(", comma(data$`Offsets Issued`), ")"),
+      hoverinfo = "text", size=~data$`Offsets Issued`, color= ~data$`Project Type`,
+      marker=list(sizeref=3, sizemode="diameter"), colors = viridis_pal(option = "D")(4)) %>% 
+      layout(title = 'Offset Project Locations<br />(Hover for Name)', geo = g)
+
+  p
+  })
+  
 })
 
-names(mergedf6.6)

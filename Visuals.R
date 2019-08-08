@@ -94,24 +94,24 @@ api_create(forestplot, filename = "forestplot")
 Livestockviz <- subset(mergedf6.6, `Project Type` == "Livestock")
 Livestockviz <- subset(Livestockviz, `Vintage Year` > 2010)
 names(Livestockviz)
-Livestockviz <- subset(Livestockviz, !is.na(`Project Administrator`))
+Livestockviz <- subset(Livestockviz, !is.na(Offset.Project.Operator))
 glimpse(Livestockviz)
 Livestockviz$`Offsets Issued` <- as.numeric(Livestockviz$`Offsets Issued`)
-Livestockviz <- Livestockviz %>% group_by(`Project Administrator`, `Vintage Year`) %>% summarise(OffsetsIssued = sum(`Offsets Issued`))
+Livestockviz <- Livestockviz %>% group_by(Offset.Project.Operator, `Vintage Year`) %>% summarise(OffsetsIssued = sum(`Offsets Issued`))
 
-Livestockviz2 <- Livestockviz %>% group_by(`Project Administrator`) %>% summarise(OffsetsIssued = sum(OffsetsIssued))
+Livestockviz2 <- Livestockviz %>% group_by(Offset.Project.Operator) %>% summarise(OffsetsIssued = sum(OffsetsIssued))
 
 Livestockviz3 <- subset(Livestockviz, OffsetsIssued >= 20000)
 
 
-p <- ggplot(data=Livestockviz3, aes(y= OffsetsIssued, x= `Vintage Year`, fill = `Project Administrator`)) + 
+p <- ggplot(data=Livestockviz3, aes(y= OffsetsIssued, x= `Vintage Year`, fill = Offset.Project.Operator)) + 
   labs(x = "Vintage Year", y = "Carbon Offsets Issued (in thousands)")+
   geom_bar(stat="identity") + labs() + 
   theme_light() + scale_fill_viridis(discrete = TRUE) + labs(fill = "Project Administrator") + scale_y_continuous(labels = unit_format(unit = "k", scale = 1e-3))
 p
 Livestockplot <- ggplotly(p) %>%
   config(displayModeBar = F) %>% layout(xaxis=list(fixedrange=TRUE)) %>% 
-  layout(yaxis=list(fixedrange=TRUE)) %>% config(showLink = F)
+  layout(yaxis=list(fixedrange=TRUE)) %>% config(showLink = F)  
 Livestockplot
 api_create(Livestockplot, filename = "Livestockplot")
 
