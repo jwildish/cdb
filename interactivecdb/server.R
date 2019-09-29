@@ -8,12 +8,8 @@
 
 
 # Define server logic required to draw a histogram
-library(shiny)
-library(DT)
-library(shinydashboard)
-library(plotly)
-library(dplyr)
-library(scales)
+
+
 
 mergedf6.6$Offset.Project.Operator <- as.character(mergedf6.6$Offset.Project.Operator)
 devnames <- unique(mergedf6.6$Offset.Project.Operator)
@@ -49,14 +45,17 @@ shinyServer(function(input, output, session) {
   })
   
   output$mytable <- DT::renderDataTable(DT::datatable({
-  #  names(mergedf6.6)
-    mergedf6.6 <- mergedf6.6%>% select(Offset.Project.Operator, `Project Type`, Project.Name, Project.ID, State, City, `Offsets Issued`, 
-                                       `Number of Offsets Unretired (Estimated as of 12/18)`, `Percent of Offsets Sold (Estimated as of 12/18)`, `Vintage Year`,
-                                       `Offset Designation`, `Issuance Date`, Website)
+    names(mergedf6.6)
+    
+    mergedf6.6 <- mergedf6.6%>% dplyr::select(Offset.Project.Operator, `Project Type`, Project.Name, Website, `View Documentation`, State, City, `Offsets Issued`, 
+                                        `Vintage Year`,
+                                       `Offset Designation`, `Issuance Date`, Invalidation.Start, Registry,  Project.ID, `Number of Offsets Unretired (Estimated as of 12/18)`,
+                                       `Percent of Offsets Sold (Estimated as of 12/18)`)
     
     mergedf6.6 <- rename(mergedf6.6, "Project Name" = "Project.Name")
     mergedf6.6 <- rename(mergedf6.6, "Project ID" = "Project.ID")
     mergedf6.6 <- rename(mergedf6.6, "Offset Project Operator" = "Offset.Project.Operator")
+    mergedf6.6 <- rename(mergedf6.6, "Invalidation Length" = "Offset Designation")
     
     
     
@@ -74,7 +73,9 @@ shinyServer(function(input, output, session) {
       data <- data[data$`Offset Project Operator` %in% input$dev,]
     }
    
-    data$Website <- paste0('<a href="', data$Website,'">',data$Website,"</a>")
+    data$Website <- paste0('<a href="', data$Website,'">',"Website","</a>")
+    data$`View Documentation` <- paste0('<a href="', data$`View Documentation`,'">',"View Documentation","</a>")
+    
     
     data$`Offsets Issued` <- format(as.numeric(data$`Offsets Issued`), big.mark=",") 
     data$`Number of Offsets Unretired (Estimated as of 12/18)` <- format(as.numeric(data$`Number of Offsets Unretired (Estimated as of 12/18)`), big.mark=",") 
@@ -90,7 +91,7 @@ shinyServer(function(input, output, session) {
   ), autoWidth = TRUE,  pageLength = 10,
   lengthMenu = c(10, 20, 50), dom = 'Brtip', buttons = c('copy','excel', 'pdf', 'print'), rownames=FALSE,
   column = list(list(width = '150px', width = '50px'))))  %>% 
-    DT::formatStyle(columns = c(1:13), fontSize = '75%'))
+    DT::formatStyle(columns = c(1:19), fontSize = '75%'))
   
   output$downloadData <- downloadHandler(
     filename = function() {
@@ -125,7 +126,9 @@ shinyServer(function(input, output, session) {
       layout(yaxis = list(title = 'Offsets Issued (by year)'), barmode = 'stack') 
   })
   
-  output$mapPlot <- renderPlotly({
+  output$mapPlot <- renderLeaflet({
+
+    
     data <- mergedf6.6
     if (input$y != "All") {
       data <- data[data$`Offset Designation` %in% input$y,]
@@ -144,29 +147,15 @@ shinyServer(function(input, output, session) {
     
     data$CityState <- paste(data$City, ",", data$State)
     
-    data <- merge(data, geocode, by = "CityState")
+    data2 <- merge(data, geocode, by = "CityState", all.x = T)
+    glimpse(data2)
     
-    g <- list(
-      scope = 'usa',
-      projection = list(type = 'albers usa'),
-      showland = TRUE,
-      landcolor = toRGB("gray95"),
-      subunitcolor = toRGB("gray85"),
-      countrycolor = toRGB("gray85"),
-      countrywidth = 0.5,
-      subunitwidth = 0.5
-    )
+    leaflet(data2) %>% addProviderTiles(providers$CartoDB.Positron) %>% 
+      addCircleMarkers(lat=~lat, lng=~lon,
+                       weight = 3, opacity = .8, color =~pal(`Project Type`), radius = ~(data2$`Offsets Issued`)^.17)
     
-    Operatorandurllookup2$lat <- jitter(Operatorandurllookup2$lat, factor = 0.6)
-    Operatorandurllookup2$lon <- jitter(Operatorandurllookup2$lon, factor = 0.6)
+    
 
-    p <- plot_geo(data, lat = ~lat, lon = ~lon) %>% add_markers(
-      text = paste(data$Offset.Project.Operator, "(", comma(data$`Offsets Issued`), ")"),
-      hoverinfo = "text", size=~data$`Offsets Issued`, color= ~data$`Project Type`,
-      marker=list(sizeref=3, sizemode="diameter"), colors = viridis_pal(option = "D")(4)) %>% 
-      layout(title = 'Offset Project Locations<br />(Hover for Name)', geo = g)
-
-  p
   })
   
 })

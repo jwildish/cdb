@@ -9,12 +9,26 @@ library(fuzzyjoin)
 #install.packages("shinycssloaders")
 library(shinycssloaders)
 library(viridis)
+library(ggmap)
+library(tidyverse)
+library(dplyr)
+library(plotly)
+library(leaflet)
+library(viridis)
 getwd()
 
 #write.csv(mergedf6.6, file = "./interactivecdb/Data/mergedf6.6.csv")
+#write.csv(mergedf6.6, file = "./mergedf6.6.csv")
+#write.csv(mergedf6.6, file = "./interactivecdb/mergedf6.6.csv")
+#write.csv(Operatorandurllookup, file = "./interactivecdb/Operatorandurllookup.csv")
+#write.csv(Operatorandurllookup, file = "./interactivecdb/Data/Operatorandurllookup.csv")
+#write.csv(Operatorandurllookup, file = "./Operatorandurllookup.csv")
 
 #mergedf6.6 <-read.csv("./interactivecdb/Data/mergedf6.6.csv")
-mergedf6.6 <-read.csv("./Data/mergedf6.6.csv")
+mergedf6.6 <-read.csv("./mergedf6.6.csv")
+
+Operatorandurllookup <-read.csv("./Operatorandurllookup.csv")
+
 names(mergedf6.6)
 
 mergedf6.6 <- rename(mergedf6.6, "Offset.Project Operator" = "Offset.Project.Operator")
@@ -28,6 +42,7 @@ mergedf6.6 <- rename(mergedf6.6, "Project Type" = "Project.Type")
 mergedf6.6 <- rename(mergedf6.6, "Vintage Year" = "Vintage.Year")
 mergedf6.6 <- rename(mergedf6.6, "Issuance Date" = "Issuance.Date")
 
+mergedf6.6$Project.Name[mergedf6.6$Project.Name == "Finite Carbon –"] <- ""
 mergedf6.6$`Project Type`[mergedf6.6$`Project Type` == "U.S Forest" ] <- "U.S. Forest"
 
 mergedf6.6$`Vintage Year` <- as.character(mergedf6.6$`Vintage Year`)
@@ -60,6 +75,17 @@ names(Operatorandurllookup)
 names(mergedf6.6)
 
 names(Operatorandurllookup)
+
+Operatorandurllookup$Project.Name<- gsub("-",":", Operatorandurllookup$Project.Name)
+Operatorandurllookup$Project.Name<- gsub("–",": ", Operatorandurllookup$Project.Name)
+Operatorandurllookup$Project.Name<- gsub("Finite Carbon: ","", Operatorandurllookup$Project.Name)
+Operatorandurllookup$Project.Name<- gsub("Finite Carbon : ","", Operatorandurllookup$Project.Name)
+
+
+
+Operatorandurllookup$Project.Name <- str_trim(Operatorandurllookup$Project.Name, side = "left")
+mergedf6.6$Project.Name <- str_trim(mergedf6.6$Project.Name, side = "left")
+
 mergedf6.6 <- rename(mergedf6.6, "Project.Type" = "Project Type")
 mergedf6.6 <- rename(mergedf6.6, "Offset.Project.Operator" = "Offset.Project Operator")
 
@@ -85,3 +111,19 @@ mergedf6.6$State[mergedf6.6$State == "Virginia"] <- "VA"
 
 
 table(mergedf6.6$State)
+names(mergedf6.6)
+library(dplyr)
+locationtable <- mergedf6.6 %>% select(`Offsets Issued`, `Vintage Year`, State) %>% group_by(State, `Vintage Year`) %>% summarise(issues =sum(`Offsets Issued`))
+
+locationtable$Percent <- locationtable$issues / sum(locationtable$issues)
+
+
+substring(mergedf6.6$Project.Documentation, 4)
+mergedf6.6$Registry <- substring(mergedf6.6$Project.Documentation, 1, 3)
+
+mergedf6.6$`View Documentation` <- ifelse((mergedf6.6$Registry == "ACR"),
+                                          paste0("https://acr2.apx.com/mymodule/reg/prjView.asp?id1=", substring(mergedf6.6$Project.Documentation, 4)), 
+                                          ifelse((mergedf6.6$Registry =="CAR"), paste0("https://thereserve2.apx.com/mymodule/reg/prjView.asp?id1=", substring(mergedf6.6$Project.Documentation, 4)), paste0("https://www.vcsprojectdatabase.org/#/home")))
+
+
+

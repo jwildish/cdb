@@ -5,23 +5,6 @@
 # Find out more about building applications with Shiny here:
 #
 #    http://shiny.rstudio.com/
-#
-library(dplyr)
-library(readxl)
-library(DT)
-library(shiny)
-library(shinydashboard)
-library(plotly)
-library(ggplot2)
-library(lubridate)
-#
-library(shiny)
-library(DT)
-library(shinydashboard)
-library(plotly)
-library(dplyr)
-library(RCurl)
-library(leaflet)
 
 # Define UI for application that draws a histogram
 shinyUI(fluidPage(
@@ -39,6 +22,5 @@ shinyUI(fluidPage(
                      
     ), tabsetPanel(type = "tabs",
                         tabPanel("Table", DT::dataTableOutput("mytable")%>% withSpinner(color="#0dc5c1")),
-                        tabPanel("Graph", plotlyOutput("trendPlot")),
-                        tabPanel("Map", br(), br(), plotlyOutput("mapPlot"))))
-    )
+                        tabPanel("Graph", plotlyOutput("trendPlot")))))
+    

@@ -12,26 +12,38 @@ library(RCurl)
 library(reticulate)
 library(tabulizer)
 library(data.table)
+library(kableExtra)
+library(dplyr)
+library(devtools)
+library(formattable)
+library(DT)
+
+
+
+#use_python("C:/Users/Jordan/Anaconda3/python.exe", required = T)
+py_discover_config()
+
+py_install("scipy")
+py_install("tabula-py")
+
+py_run_string("pip install tabula-py")
+
+py_run_string("from tabula import convert_into")
+
+py_run_string("tabula.convert_into('https://www.arb.ca.gov/cc/capandtrade/offsets/issuance/arb_offset_credit_issuance_table.pdf', 'output10.csv', output_format = 'csv', pages='all')")
+
+
+#py_run_file("C:/Users/Jordan/Documents/GetNOAATempData.py")
+#py_run_file("C:/Users/Jordan/Desktop/E2/dbscrape.py")
+
+s3 <- read.csv("/Users/istaeheli/Documents/RStudio Files/NOAA Temp Data.csv", header = TRUE)
 
 
 #first, pull this pdf and convert to Excel in Acrobat. https://www.arb.ca.gov/cc/capandtrade/offsets/issuance/arb_offset_credit_issuance_table.pdf
 
-#arb_offset_credit_issuance_table2 <- read.csv("C:/Users/Jordan/output8.csv", skip = 3)
 
-arb_offset_credit_issuance_table2 <- read.csv("C:/Users/Jordan/output9.csv", skip = 4)
+#arb_offset_credit_issuance_table2 <- read.csv("C:/Users/Jordan/output9.csv", skip = 4)
 
-names(arb_offset_credit_issuance_table2)
-
-
-arb_offset_credit_issuance_table2$X.1 <- NULL
-arb_offset_credit_issuance_table2$X <- NULL
-
-arb_offset_credit_issuance_table2$X.2 <- NULL
-arb_offset_credit_issuance_table2$X.3 <- NULL
-
-glimpse(arb_offset_credit_issuance_table2)
-
-table(arb_offset_credit_issuance_table2$ARB.Project.ID..)
 arb_offset_credit_issuance_table2 <- subset(arb_offset_credit_issuance_table2, ARB.Project.ID..!= "ARB Project ID #")
 arb_offset_credit_issuance_table2 <- subset(arb_offset_credit_issuance_table2, ARB.Project.ID..!= "")
 glimpse(arb_offset_credit_issuance_table2)
@@ -64,7 +76,6 @@ arb_offset_credit_issuance_table2 <- rbind(arb_offset_credit_issuance_table2, ar
 
 #arb_offset_credit_issuance_table <- read_excel("C:/Users/Jordan/Desktop/E2/arb_offset_credit_issuance_table512.xlsx", skip = 4)
 
-arb_offset_credit_issuance_table <- arb_offset_credit_issuance_table2
 
 arb_offset_credit_issuance_table <- subset(arb_offset_credit_issuance_table, Type.of.Protocol != "")
 arb_offset_credit_issuance_table <- subset(arb_offset_credit_issuance_table, Project.Name != "")
@@ -77,8 +88,8 @@ glimpse(arb_offset_credit_issuance_table)
 arb_offset_credit_issuance_table$X <- NULL
 
 
-X2015_2017compliancereport <- read_excel("C:/Users/Jordan/Desktop/E2/2015-2017compliancereport.xlsx", 
-                                         sheet = "2015-2017 Offset Detail", skip = 4)
+#X2015_2017compliancereport <- read_excel("C:/Users/Jordan/Desktop/E2/2015-2017compliancereport.xlsx", 
+ #                                        sheet = "2015-2017 Offset Detail", skip = 4)
 
 
 #function to write URL
@@ -538,11 +549,7 @@ Fullbind3 <- rename(Fullbind3, "thedata" = "Fullbind3")
 
 tableoutput <- separate(Fullbind3, thedata, c("Blank", "Project ID", "Start_Reporting_Date", "End_Reporting_Date", "Vintage_Year", "Offsets_issued", "Issuance_Date", "Invalidation_Length", "years", "Invalidation_start", "OffsetsinForestBuffer", "Extra2", "Extra3"), sep = " +")
 
-names(tableoutput)
-
-names(X2015_2017compliancereport)
 offsetssold <- X2015_2017compliancereport %>% group_by(`ARB Project ID #`) %>% dplyr:::summarize(Quantity = sum(Quantity))
-
 
 offsetssold <- rename(offsetssold, "projectid" = "ARB Project ID #")
 
@@ -551,7 +558,9 @@ tableoutput <- rename(tableoutput, "projectid" = "Project ID")
 
 mergedfinal109 <- merge(tableoutput, offsetssold, by = "projectid", all.x = T)
 names(arb_offset_credit_issuance_table)
-arboffsets <- arb_offset_credit_issuance_table %>% select(`ARB Project ID #`, Project.Name, Type.of.Protocol, Offset.Project.Operator, Project.Type)
+
+
+arboffsets <- arb_offset_credit_issuance_table %>% select(`ARB Project ID #`, Project.Name, Type.of.Protocol, Offset.Project.Operator, Project.Type, Project.Documentation)
 
 mergedfinal109$projectgeneralid <- paste(mergedfinal109$projectid)
 test <- separate(mergedfinal109, projectgeneralid, c("genid", "letter"), sep = "-")
@@ -574,10 +583,10 @@ Issuance1 <- subset(mergedfinal109v2, is.na(OffsetsinForestBuffer))
 glimpse(forestbuffer)
 
 forestbuffer <- forestbuffer %>% select(projectid, Start_Reporting_Date, End_Reporting_Date, Vintage_Year, Offsets_issued, OffsetsinForestBuffer, Issuance_Date, Invalidation_Length,
-                                        Invalidation_start, Quantity, Project.Name, Type.of.Protocol, Offset.Project.Operator, Project.Type)
+                                        Invalidation_start, Quantity, Project.Name, Type.of.Protocol, Offset.Project.Operator, Project.Type, Project.Documentation)
 
 Issuance1 <- Issuance1 %>% select(projectid, Start_Reporting_Date, End_Reporting_Date, Vintage_Year, Offsets_issued, OffsetsinForestBuffer, Issuance_Date, Invalidation_Length,
-                                        Invalidation_start, Quantity, Project.Name, Type.of.Protocol, Offset.Project.Operator, Project.Type)
+                                        Invalidation_start, Quantity, Project.Name, Type.of.Protocol, Offset.Project.Operator, Project.Type, Project.Documentation)
 Issuancetable <- rbind(forestbuffer, Issuance1)
 
 attach(Issuancetable)
@@ -594,13 +603,8 @@ Issuancetable3 <- subset(Issuancetable2, duplicatecheck != "TRUE")
 
 #identifying duplicates
 
-
-
-names(Issuancetable3)
-
 Issuancetable3$Offsets_issued <- as.numeric(gsub(",","",Issuancetable3$Offsets_issued))
 Issuancetable3$OffsetsinForestBuffer <- as.numeric(gsub(",","",Issuancetable3$OffsetsinForestBuffer))
-library(tidyverse)
 Issuancetable3$OffsetsinForestBuffer <- replace_na(Issuancetable3$OffsetsinForestBuffer, 0)
 Issuancetable3$Quantity <- replace_na(Issuancetable3$Quantity, 0)
 
@@ -608,40 +612,19 @@ Issuancetable3$numberremaining <- (Issuancetable3$Offsets_issued- Issuancetable3
 
 Issuancetable3$percentsold <- Issuancetable3$Quantity/(Issuancetable3$Offsets_issued - Issuancetable3$OffsetsinForestBuffer)
 
-table(Issuancetable3$numberremaining)
-table(Issuancetable3$percentsold)
-
-
-
 #data clean, now formatting
-
-
-library(kableExtra)
-library(dplyr)
-library(devtools)
-
-library(formattable)
-library(DT)
 
 mergeddf <- Issuancetable3
 
-mergeddf$IssuanceLetter <- NULL
-mergeddf$dupconcat <- NULL
-mergeddf$duplicatecheck <- NULL
 mergeddf$`Project Type` <- as.factor(mergeddf$Project.Type)
 mergeddf$`Offset Project Operator` <- as.factor(mergeddf$Offset.Project.Operator)
 mergeddf$`Project Name` <- as.factor(mergeddf$Project.Name)
 mergeddf$`Type of Protocol` <- as.factor(mergeddf$Type.of.Protocol)
 mergeddf$Vintage_Year <- as.factor(mergeddf$Vintage_Year)
 
-
 mergeddf2 <- subset(mergeddf, Vintage_Year != "")
 
-head(mergeddf2)
-
 library(lubridate)
-library(dplyr)
-names(mergeddf2)
 
 mergeddf2$Invalidation_start <- mdy(mergeddf2$Invalidation_start)
 
@@ -658,16 +641,9 @@ mergeddf2$diff_in_days <- as.numeric(mergeddf2$diff_in_days)
 
 mergeddf2$diff_in_year <- mergeddf2$diff_in_days/365
 
-
 mergeddf2$Invalidation_Length <- as.numeric(mergeddf2$Invalidation_Length)
 
 mergeddf2$Invalidation2 <- ifelse(mergeddf2$diff_in_year > mergeddf2$Invalidation_Length, 0, mergeddf2$Invalidation_Length)
-
-names(mergeddf2)
-
-mergeddf2$date <- NULL
-mergeddf2$diff_in_days <- NULL
-mergeddf2$diff_in_year <- NULL
 
 
 mergeddf2 <- rename(mergeddf2, "Reporting Start Date" = "Start_Reporting_Date")
@@ -685,23 +661,9 @@ mergeddf2 <- rename(mergeddf2, "Invalidation Period End Date" = "invalidationend
 
 mergeddf2$`Offsets issued` <- mergeddf2$`Offsets issued` - mergeddf2$OffsetsinForestBuffer
 
-names(mergeddf2)
+glimpse(mergeddf2)
 
-mergeddf2$`Project Documentation` <- NULL
-#mergeddf2$OffsetsinForestBuffer <- NULL
-mergeddf2$`Reporting Start Date` <- NULL
-mergeddf2$`Reporting End Date` <- NULL
-mergeddf2$`Invalidation Start` <- NULL
-
-
-
-names(mergeddf2)
-
-names(mergeddf2)
-
-table(mergeddf2$`Percent of Offsets Sold (Estimated, as of Dec. 2018)`)
-
-mergeddf3 <- mergeddf2 %>% select(`Type of Protocol`, `Project Type`, `Offsets issued`, `Offset Project Operator`, `Vintage Year`, `Offset Designation`, `Invalidation Period End Date`, `Project Name`, `Issuance Date`, `Project ID`, `Invalidation Length`, `Number of Offsets Un-retired (Estimated, as of Dec. 2018)`,  `Percent of Offsets Sold (Estimated, as of Dec. 2018)`, OffsetsinForestBuffer)
+mergeddf3 <- mergeddf2 %>% select(`Type of Protocol`, `Project Type`, `Offsets issued`, `Offset Project Operator`, `Vintage Year`, `Offset Designation`, `Invalidation Start`, `Invalidation Period End Date`, `Project Name`, `Issuance Date`, `Project ID`, `Invalidation Length`, `Number of Offsets Un-retired (Estimated, as of Dec. 2018)`,  `Percent of Offsets Sold (Estimated, as of Dec. 2018)`, OffsetsinForestBuffer, Project.Documentation)
 
 library(scales)
 mergeddf3$`Offsets issued` <- as.numeric(mergeddf3$`Offsets issued`)
@@ -736,11 +698,11 @@ mergeddf4$Project.Type<- replace(mergeddf4$Project.Type, mergeddf4$Project.Type=
 mergeddf4$Project.Type<- replace(mergeddf4$Project.Type, mergeddf4$Project.Type=="Ozone\r\nDepleting Substances", "Ozone Depleting Substances")
 mergeddf4$Project.Type<- replace(mergeddf4$Project.Type, mergeddf4$Project.Type=="Ozone", "Ozone Depleting Substances")
 
-mergeddf4 <- mergeddf4 %>% select(`Project ID`, Project.Type, `Offset.Project Operator`, `Offset Designation`, `Invalidation Period End Date`, `Offsets issued`, `Number of Offsets Un-retired (Estimated, as of Dec. 2018)`, `Percent of Offsets Sold (Estimated, as of Dec. 2018)`, Project.Name, `Vintage Year`, `Invalidation Length`,  `Type of Protocol`, `Issuance Date`)
+mergeddf4 <- mergeddf4 %>% select(`Project ID`, Project.Type, `Offset.Project Operator`, `Offset Designation`,`Invalidation Start`,  `Invalidation Period End Date`, `Offsets issued`, `Number of Offsets Un-retired (Estimated, as of Dec. 2018)`, `Percent of Offsets Sold (Estimated, as of Dec. 2018)`, Project.Name, `Vintage Year`, `Invalidation Length`,  `Type of Protocol`, `Issuance Date`, Project.Documentation)
 
 mergeddf5 <- mergeddf4
 
-mergeddf5 <- mergeddf5 %>% select(`Project ID`, Project.Type, `Offset.Project Operator`, `Offsets issued`, `Number of Offsets Un-retired (Estimated, as of Dec. 2018)`, `Percent of Offsets Sold (Estimated, as of Dec. 2018)`, Project.Name, `Vintage Year`, `Offset Designation`, `Type of Protocol`, `Invalidation Period End Date`, `Issuance Date`)
+mergeddf5 <- mergeddf5 %>% select(`Project ID`, Project.Type, `Offset.Project Operator`, `Offsets issued`, `Number of Offsets Un-retired (Estimated, as of Dec. 2018)`, `Percent of Offsets Sold (Estimated, as of Dec. 2018)`, Project.Name, `Vintage Year`, `Offset Designation`, `Type of Protocol`, `Invalidation Period End Date`, `Invalidation Start`, `Issuance Date`, Project.Documentation)
 
 mergeddf5 <- rename(mergeddf5, "Vintage.Year" = "Vintage Year")
 mergeddf5$`Offset Designation` <- as.factor(mergeddf5$`Offset Designation`)
@@ -764,15 +726,24 @@ carbondatabasebetafeb2019
 
 
 names(mergeddf5)
+mergedf6.5 <- mergeddf5
 
-mergedf6.5 <- mergeddf5 %>% select(`Project ID`, `Project Type`, `Offset.Project.Operator`, Project.Name, `Offsets issued`,
+mergedf6.5 <- mergeddf5 %>% select(`Project ID`, Project.Type, `Offset.Project Operator`, Project.Name, `Offsets issued`,
                                    `Number of Offsets Un-retired (Estimated, as of Dec. 2018)`, `Percent of Offsets Sold (Estimated, as of Dec. 2018)`,
-                                   Vintage.Year, `Offset Designation`, `Type of Protocol`, `Invalidation Period End Date`, `Issuance Date`)
+                                   Vintage.Year, `Offset Designation`, `Type of Protocol`, `Invalidation Period End Date`,`Invalidation Start`,  `Issuance Date`, Project.Documentation)
 
 mergedf6.6<- mergedf6.5[!duplicated(mergedf6.5[1:3]),]
 mergedf6.6 <- mergedf6.6[rev(order(mergedf6.6$Vintage.Year)),] 
+mergedf6.6$Project.Name[mergedf6.6$Project.Name == "Finite Carbon –"] <- ""
 
-write.csv(mergedf6.6, "mergedf6.6.csv")
+mergedf6.6$Project.Name<- gsub("-",":", mergedf6.6$Project.Name)
+mergedf6.6$Project.Name<- gsub("–",": ", mergedf6.6$Project.Name)
+mergedf6.6$Project.Name<- gsub("Finite Carbon: ","", mergedf6.6$Project.Name)
+mergedf6.6$Project.Name<- gsub("Finite Carbon : ","", mergedf6.6$Project.Name)
+
+write.csv(mergedf6.6, file = "./interactivecdb/Data/mergedf6.6.csv")
+write.csv(mergedf6.6, file = "./mergedf6.6.csv")
+write.csv(mergedf6.6, file = "./interactivecdb/mergedf6.6.csv")
 getwd()
 carbondatabasebetamar2019 <-mergedf6.6 %>% datatable(filter ='top', selection = 'multiple', rownames = FALSE,
                                                     extensions = 'Buttons', options = list(initComplete = JS(
@@ -787,8 +758,18 @@ carbondatabasebetamar2019 <-mergedf6.6 %>% datatable(filter ='top', selection = 
 carbondatabasebetamar2019
 
 
+names(mergedfdatetest)
+whatstheproblem <- mergedfdatetest %>% select(Project.ID, Project.Name)
 
+names(mergedf6.6)
 
+whatstheproblem$`Project ID` <- whatstheproblem$Project.ID
+whatstheproblem$`Project.ID` <- NULL
+
+names(whatstheproblem)
+names(mergedf6.6)
+
+test <- merge(mergedf6.6, whatstheproblem, by = "Project ID", all = T)
 
 
 
