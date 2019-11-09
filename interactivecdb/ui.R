@@ -9,13 +9,16 @@
 # Define UI for application that draws a histogram
 shinyUI(fluidPage(
     headerPanel(title = "Regulatory Carbon Offset Database"), 
-    fluidRow(column(3, selectizeInput('x', label = 'Project Type',
+    fluidRow(column(2, selectizeInput('x', label = 'Project Type',
                                     choices = c("All", protnames))),
-                     column(3, selectizeInput('y', label = 'Offset Designation', 
+                     column(2, selectizeInput('y', label = 'Invalidation Length', 
                                     choices = c("All", desnamesnames))),
-                    column(3, selectizeInput("color", label = "Vintage Year", 
+                    column(2, selectizeInput("color", label = "Vintage Year", 
                                     choices = c("All", vintnames),
                                     selected = "All")),
+             column(2, selectizeInput("reg", label = "Registry", 
+                                      choices = c("All", unique(offsets2$Registry)),
+                                      selected = "All")),
                    column(3, selectizeInput("dev", label = "Project Developer", 
                                     choices = c("All", devnames),
                                     selected = "All"))
